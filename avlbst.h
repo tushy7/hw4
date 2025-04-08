@@ -315,56 +315,54 @@ void AVLTree<Key, Value>::correctImbalance(AVLNode<Key, Value>* node)
 template<class Key, class Value>
 void AVLTree<Key, Value>::remove(const Key& key)
 {
-    //TODO
+    AVLNode<Key, Value>* node = static_cast<AVLNode<Key, Value>*>(this -> internalFind(key));
+    if (node == NULL) return;
 
-    AVLNode<Key, Value>* target = static_cast<AVLNode<Key, Value>*>(this->internalFind(key));
-    if (target == NULL) return;
-
-    // if two children, reduce to one-child case by swapping with predecessor
-    if (target->getLeft() != NULL && target->getRight() != NULL)
+    if (node->getLeft() != NULL && node->getRight() != NULL)
     {
-        AVLNode<Key, Value>* pred = static_cast<AVLNode<Key, Value>*>(this->predecessor(target));
-        nodeSwap(target, pred);
+        AVLNode<Key, Value>* pred = static_cast<AVLNode<Key, Value>*>(this-> predecessor(node));
+        nodeSwap(node, pred);
     }
 
-    // now it has at most one child
-    Node<Key, Value>* child = NULL;
-    if (target->getLeft() != NULL)
-    {
-        child = target->getLeft();
-    }
-    else if (target->getRight() != NULL)
-    {
-        child = target->getRight();
-    }
+    AVLNode<Key, Value>* parent = node->getParent();
+    Node<Key, Value>* subtree = NULL; //start off at null
 
-    AVLNode<Key, Value>* parent = target->getParent();
-    AVLNode<Key, Value>* balanceStart = parent;
-    int balanceDiff = 0;
-
-    if (child != NULL)
+    if (node->getLeft() != NULL)
     {
-        child->setParent(parent);
+        subtree = node->getLeft();
+    }
+    else if (node->getRight() != NULL)
+    {
+        subtree = node->getRight();
     }
 
+    if (subtree != NULL)
+    {
+        subtree -> setParent(parent);
+    }
+
+    int diff = 0;
     if (parent == NULL)
     {
-        this->root_ = static_cast<AVLNode<Key, Value>*>(child);
-    }
-    else if (parent->getLeft() == target)
-    {
-        parent->setLeft(child);
-        balanceDiff = 1;
+        this->root_ = static_cast<AVLNode<Key, Value>*>(subtree);
     }
     else
     {
-        parent->setRight(child);
-        balanceDiff = -1;
+        if (parent -> getLeft() == node)
+        {
+            parent -> setLeft(subtree);
+            diff = 1;
+        }
+        else
+        {
+            parent -> setRight(subtree);
+            diff = -1;
+        }
     }
-
-    delete target;
-    rebalanceAfterDelete(balanceStart, balanceDiff);
+    delete node;
+    rebalanceAfterDelete(parent, diff);
 }
+
 
 
 template<class Key, class Value>
@@ -530,31 +528,52 @@ void AVLTree<Key, Value>::rebalanceAfterDelete(AVLNode<Key, Value>* node, int di
     }
 }
 
-/*
-* Helper to fix balance factors after double rotations
-*/
+
 template<class Key, class Value>
-void AVLTree<Key, Value>::adjustAfterDoubleRotate(AVLNode<Key, Value>* node, AVLNode<Key, Value>* child, AVLNode<Key, Value>* grand, int grandBal)
+void AVLTree<Key, Value>::adjustAfterDoubleRotate(AVLNode<Key, Value>* node, AVLNode<Key, Value>* child, AVLNode<Key, Value>* grand,int grandBal)
 {
     if (grand == NULL) return;
+    if (child == node->getLeft())
+    {
+        if (grandBal == 0)
+        {
+            node->setBalance(0);
+            child->setBalance(0);
+        }
+        else if (grandBal == 1)
+        {
+            node->setBalance(0);
+            child->setBalance(-1);
+        }
+        else 
+        {
+            node->setBalance(1);
+            child->setBalance(0);
+        }
+    }
 
-    if (grandBal == 0)
+    else if (child == node->getRight())
     {
-        node->setBalance(0);
-        child->setBalance(0);
+        if (grandBal == 0)
+        {
+            node->setBalance(0);
+            child->setBalance(0);
+        }
+        else if (grandBal == -1)
+        {
+            node->setBalance(0);
+            child->setBalance(1);
+        }
+        else // grandBal == 1
+        {
+            node->setBalance(-1);
+            child->setBalance(0);
+        }
     }
-    else if ((child == node->getLeft() && grandBal == 1) || (child == node->getRight() && grandBal == -1))
-    {
-        node->setBalance(0);
-        child->setBalance(grandBal);
-    }
-    else
-    {
-        node->setBalance(-grandBal);
-        child->setBalance(0);
-    }
-    grand->setBalance(0);
+
+    grand->setBalance(0); // Always reset grandchild balance
 }
+
 
 // Performs a left rotation around node x
 template<class Key, class Value>
