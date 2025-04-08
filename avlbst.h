@@ -145,8 +145,8 @@ protected:
 
     void rebalanceAfterDelete(AVLNode<Key, Value>* node, int diff);
     void adjustAfterDoubleRotate(AVLNode<Key, Value>* node, AVLNode<Key, Value>* child, AVLNode<Key, Value>* grand, int grandBal);
-    void rotateRight(AVLNode<Key, Value>* x);
-    void rotateLeft(AVLNode<Key, Value>* x);
+    void rotateRight(AVLNode<Key, Value>* someNode);
+    void rotateLeft(AVLNode<Key, Value>* someNode);
 
 
 };
@@ -320,7 +320,7 @@ void AVLTree<Key, Value>::remove(const Key& key)
 
     if (node->getLeft() != NULL && node->getRight() != NULL)
     {
-        AVLNode<Key, Value>* pred = static_cast<AVLNode<Key, Value>*>(this-> predecessor(node));
+        AVLNode<Key, Value>* pred = static_cast<AVLNode<Key, Value>*>(this -> predecessor(node));
         nodeSwap(node, pred);
     }
 
@@ -571,76 +571,64 @@ void AVLTree<Key, Value>::adjustAfterDoubleRotate(AVLNode<Key, Value>* node, AVL
         }
     }
 
-    grand->setBalance(0); // Always reset grandchild balance
+    grand->setBalance(0); // need to reset grandchild bal at end
 }
 
 
-// Performs a left rotation around node x
 template<class Key, class Value>
-void AVLTree<Key, Value>::rotateLeft(AVLNode<Key, Value>* x)
+void AVLTree<Key, Value>::rotateLeft(AVLNode<Key, Value>* someNode)
 {
-    // get the right child which will become the new root of the subtree
-    AVLNode<Key, Value>* newRoot = x->getRight();
-
-    // shift the left subtree of newRoot to be the right of x
-    x->setRight(newRoot->getLeft());
+    AVLNode<Key, Value>* newRoot = someNode -> getRight();
+    someNode->setRight(newRoot->getLeft());
+    
     if (newRoot->getLeft() != NULL)
     {
-        newRoot->getLeft()->setParent(x);
+        newRoot->getLeft()->setParent(someNode);
     }
 
-    // connect newRoot to x's parent
-    newRoot->setParent(x->getParent());
-    if (x->getParent() == NULL)
+    // connect newRoot to someNode's parent
+    newRoot->setParent(someNode->getParent());
+    if (someNode->getParent() == NULL)
     {
-        this->root_ = newRoot; // x was the root, now newRoot is
+        this->root_ = newRoot; 
     }
-    else if (x == x->getParent()->getLeft())
+    else if (someNode == someNode -> getParent() -> getLeft())
     {
-        x->getParent()->setLeft(newRoot);
+        someNode->getParent()->setLeft(newRoot);
     }
     else
     {
-        x->getParent()->setRight(newRoot);
+        someNode->getParent()->setRight(newRoot);
     }
-
-    // complete the rotation
-    newRoot->setLeft(x);
-    x->setParent(newRoot);
+    newRoot->setLeft(someNode);
+    someNode->setParent(newRoot);
 }
 
-// Performs a right rotation around node x
 template<class Key, class Value>
-void AVLTree<Key, Value>::rotateRight(AVLNode<Key, Value>* x)
+void AVLTree<Key, Value>::rotateRight(AVLNode<Key, Value>* someNode)
 {
-    // get the left child which will become the new root of the subtree
-    AVLNode<Key, Value>* newRoot = x->getLeft();
+    AVLNode<Key, Value>* newRoot = someNode->getLeft();
 
-    // shift the right subtree of newRoot to be the left of x
-    x->setLeft(newRoot->getRight());
+    someNode->setLeft(newRoot->getRight());
     if (newRoot->getRight() != NULL)
     {
-        newRoot->getRight()->setParent(x);
+        newRoot->getRight()->setParent(someNode);
     }
-
-    // connect newRoot to x's parent
-    newRoot->setParent(x->getParent());
-    if (x->getParent() == NULL)
+    newRoot->setParent(someNode->getParent());
+    if (someNode->getParent() == NULL)
     {
-        this->root_ = newRoot; // x was the root, now newRoot is
+        this->root_ = newRoot;
     }
-    else if (x == x->getParent()->getLeft())
+    else if (someNode == someNode->getParent()->getLeft())
     {
-        x->getParent()->setLeft(newRoot);
+        someNode->getParent()->setLeft(newRoot);
     }
     else
     {
-        x->getParent()->setRight(newRoot);
+        someNode->getParent()->setRight(newRoot);
     }
-
-    // complete the rotation
-    newRoot->setRight(x);
-    x->setParent(newRoot);
+    newRoot->setRight(someNode);
+    someNode->setParent(newRoot);
 }
 
 
